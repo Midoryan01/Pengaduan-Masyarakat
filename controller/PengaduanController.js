@@ -1,5 +1,6 @@
 import Pengaduan from "../models/PengaduanModel.js";
 
+
 // Mendapatkan semua pengaduan
 export const getAllPengaduan = async (req, res) => {
   try {
@@ -24,16 +25,18 @@ export const getPengaduanById = async (req, res) => {
   }
 };
 
-// Membuat pengaduan baru
+// Controller untuk membuat pengaduan
 export const createPengaduan = async (req, res) => {
   try {
-    const { nama, alamat, nik, agama, keperluan, telp_email, umur, bukti } = req.body;
+    const { nama, alamat, nik, agama, keperluan, telp_email, umur } = req.body;
+    const bukti = req.file ? req.file.filename : null; // Ambil nama file yang diunggah jika ada
 
     // Validasi input
     if (!nama || !alamat || !nik || !agama || !keperluan || !telp_email || !umur) {
       return res.status(400).json({ message: "Semua field harus diisi." });
     }
 
+    // Buat pengaduan baru
     const newPengaduan = await Pengaduan.create({
       nama,
       alamat,
@@ -46,19 +49,16 @@ export const createPengaduan = async (req, res) => {
       status: "Proses", // Set status default ke "Proses"
     });
 
-    // Menampilkan pesan sukses
-    res.status(201).json({
-      message: "Pengaduan berhasil dibuat.",
-      pengaduan: newPengaduan
+    return res.status(201).json({
+      message: 'Pengaduan berhasil dibuat.',
+      data: newPengaduan,
     });
   } catch (error) {
-    // Menampilkan pesan error
-    res.status(500).json({
-      message: "Gagal membuat pengaduan.",
-      error: error.message
-    });
+    console.error('Error saat membuat pengaduan:', error);
+    return res.status(500).json({ message: 'Terjadi kesalahan server.' });
   }
-};
+}
+
 
 
 // Memperbarui pengaduan

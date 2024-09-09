@@ -11,7 +11,8 @@ const port = 5000;
 dotenv.config();
 
 app.use(cors());
-app.set('view engine', 'ejs');
+
+
 app.use(express.json());
 app.use(fileUpload());
 app.use(express.static("public"))
