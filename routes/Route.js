@@ -1,19 +1,14 @@
 import express from 'express';
-import multer from 'multer';
 import { getAllPengaduan, createPengaduan, getPengaduanById, updatePengaduan, deletePengaduan } from '../controller/PengaduanController.js';
-import upload from '../middlewares/upload.js';
 import { createPetugas, deletePetugas, getAllPetugas, updatePetugas } from '../controller/PetugasController.js';
 import { createTanggapan, deleteTanggapan, getAllTanggapan, getTanggapanById, updateTanggapan } from '../controller/TanggapanController.js';
-
+import upload from '../middlewares/upload.js';
 
 const router = express.Router();
 
 router.get('/pengaduan', getAllPengaduan)
 router.get('/pengaduan/:id', getPengaduanById)
-// Route untuk pengaduan dengan upload file
-router.post("/pengaduan", upload.single('bukti'), createPengaduan);
-
-
+router.post('/pengaduan', upload.single('bukti'), createPengaduan);
 router.patch('/pengaduan/:id', updatePengaduan);
 router.delete('/pengaduan/:id', deletePengaduan);
 

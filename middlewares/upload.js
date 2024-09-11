@@ -3,15 +3,16 @@ import path from 'path';
 
 // Konfigurasi penyimpanan file
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'public/images'); // Folder tujuan penyimpanan
+  destination: (req, file, cb) => {
+    cb(null,('./public/images')); // Gunakan path.resolve untuk kompatibilitas lintas platform
   },
-  filename: function (req, file, cb) {
-    cb(null, `${Date.now()}${path.extname(file.originalname)}`); // Rename file dengan timestamp
-  }
+  filename: (req, file, cb) => {
+    const filename = `${Date.now()}`;
+    cb(null, filename);
+  },
 });
 
-// Filter jenis file yang diizinkan
+// Filter untuk jenis file yang diizinkan
 const fileFilter = (req, file, cb) => {
   const allowedTypes = /jpeg|jpg|png/;
   const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
@@ -20,11 +21,10 @@ const fileFilter = (req, file, cb) => {
   if (extname && mimetype) {
     cb(null, true);
   } else {
-    cb(new Error('Hanya file gambar dengan format JPEG, JPG, atau PNG yang diperbolehkan!'));
+    cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE', 'Format file tidak diizinkan.'));
   }
 };
 
-// Konfigurasi multer dengan penyimpanan dan batas ukuran file 5MB
 const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // Batas ukuran file 5MB

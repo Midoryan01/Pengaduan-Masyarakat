@@ -36,9 +36,12 @@ const Pengaduan = db.define(
       allowNull: false,
     },
     umur: {
-      type: DataTypes.TINYINT,
+      type: DataTypes.STRING(2),
       allowNull: false,
-    },
+      validate: {
+        min: 1,
+        max: 120, // Batas umur yang masuk akal
+      },},
     bukti: {
       type: DataTypes.STRING,
       allowNull: true,
