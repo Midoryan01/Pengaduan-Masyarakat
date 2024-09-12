@@ -27,11 +27,6 @@ export const getPengaduanById = async (req, res) => {
   }
 };
 
-
-
-
-
-
 // Fungsi validasi input
 const validateInput = ({ nik, umur, telp_email }) => {
   // Validasi NIK
@@ -121,17 +116,20 @@ export const updatePengaduan = async (req, res) => {
       return res.status(404).json({ message: "Pengaduan tidak ditemukan." });
     }
 
-    await pengaduan.update({
-      nama: nama || pengaduan.nama,
-      alamat: alamat || pengaduan.alamat,
-      nik: nik || pengaduan.nik,
-      agama: agama || pengaduan.agama,
-      keperluan: keperluan || pengaduan.keperluan,
-      telp_email: telp_email || pengaduan.telp_email,
-      umur: umur || pengaduan.umur,
-      bukti: bukti || pengaduan.bukti,
-      status: status || pengaduan.status,
-    });
+    // Membuat objek untuk field yang diubah
+    const fieldsToUpdate = {};
+    if (nama) fieldsToUpdate.nama = nama;
+    if (alamat) fieldsToUpdate.alamat = alamat;
+    if (nik) fieldsToUpdate.nik = nik;
+    if (agama) fieldsToUpdate.agama = agama;
+    if (keperluan) fieldsToUpdate.keperluan = keperluan;
+    if (telp_email) fieldsToUpdate.telp_email = telp_email;
+    if (umur) fieldsToUpdate.umur = umur;
+    if (bukti) fieldsToUpdate.bukti = bukti;
+    if (status) fieldsToUpdate.status = status;
+
+    // Hanya update field yang diubah
+    await pengaduan.update(fieldsToUpdate);
 
     res.status(200).json({
       message: "Pengaduan berhasil diperbarui.",
@@ -142,6 +140,7 @@ export const updatePengaduan = async (req, res) => {
     console.error(`[PUT Update] Error: ${error.message}`);
   }
 };
+
 
 // Menghapus pengaduan
 export const deletePengaduan = async (req, res) => {
