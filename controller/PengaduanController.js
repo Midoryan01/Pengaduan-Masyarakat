@@ -1,5 +1,8 @@
 import Pengaduan from "../models/PengaduanModel.js";
+import upload from "../middlewares/upload.js";
+import fs from "fs";
 import path from "path";
+import multer from 'multer'; 
 
 // Fungsi helper untuk validasi input
 const validateInput = ({ nik, umur, telp_email }) => {
@@ -53,72 +56,114 @@ export const getPengaduanById = async (req, res) => {
 
 // Controller: Membuat pengaduan baru
 export const createPengaduan = async (req, res) => {
-  try {
-    const { nama, alamat, nik, agama, keperluan, telp_email, umur } = req.body;
+  const uploadMiddleware = upload.single('bukti');
 
-    if (!req.file) {
-      return res.status(400).json({ message: "File bukti harus diunggah." });
+  uploadMiddleware(req, res, async (err) => {
+    if (err instanceof multer.MulterError) {
+      return res.status(400).json({ message: "Error saat mengunggah file: " + err.message });
+    } else if (err) {
+      return res.status(400).json({ message: err.message });
     }
 
-    const validation = validateInput({ nik, umur, telp_email });
-    if (!validation.valid) {
-      return res.status(400).json({ message: validation.message });
+    try {
+      const { nama, alamat, nik, agama, keperluan, telp_email, umur } = req.body;
+
+      if (!req.file) {
+        return res.status(400).json({ message: "File bukti harus diunggah." });
+      }
+
+      const validation = validateInput({ nik, umur, telp_email });
+      if (!validation.valid) {
+        return res.status(400).json({ message: validation.message });
+      }
+
+      const fileName = req.file.filename;
+
+      const newPengaduan = await Pengaduan.create({
+        nama,
+        alamat,
+        nik,
+        agama,
+        keperluan,
+        telp_email,
+        umur,
+        bukti: fileName,
+        status: "Proses"
+      });
+
+      return res.status(201).json({
+        message: "Pengaduan berhasil dibuat.",
+        pengaduan: {
+          ...newPengaduan.toJSON(),
+          buktiUrl: `http://localhost:5000/images/${fileName}`
+        }
+      });
+    } catch (error) {
+      console.error(`[POST Create] Error: ${error.message}`);
+      if (req.file) {
+        fs.unlinkSync(req.file.path);
+      }
+      return res.status(500).json({ message: "Terjadi kesalahan saat membuat pengaduan." });
     }
-
-    const file = req.file;
-    const ext = path.extname(file.originalname).toLowerCase();
-    const fileName = `${Date.now()}${ext}`;
-
-    const newPengaduan = await Pengaduan.create({
-      nama,
-      alamat,
-      nik,
-      agama,
-      keperluan,
-      telp_email,
-      umur,
-      bukti: fileName,
-    });
-
-    return res.status(201).json({
-      message: "Pengaduan berhasil dibuat.",
-      pengaduan: newPengaduan,
-    });
-  } catch (error) {
-    console.error(`[POST Create] Error: ${error.message}`);
-    return res.status(500).json({ message: "Internal server error." });
-  }
+  });
 };
+
 
 // Controller: Memperbarui pengaduan
 export const updatePengaduan = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const fieldsToUpdate = req.body;
+  const uploadMiddleware = upload.single('bukti');
 
-    const pengaduan = await Pengaduan.findByPk(id);
-    if (!pengaduan) {
-      return res.status(404).json({ message: "Pengaduan tidak ditemukan." });
+  uploadMiddleware(req, res, async (err) => {
+    if (err) {
+      return res.status(400).json({ message: "Error saat mengunggah file: " + err.message });
     }
 
-    const validation = validateInput({
-      nik: fieldsToUpdate.nik,
-      umur: fieldsToUpdate.umur,
-      telp_email: fieldsToUpdate.telp_email,
-    });
-    if (!validation.valid) {
-      return res.status(400).json({ message: validation.message });
-    }
+    try {
+      const { id } = req.params;
+      const fieldsToUpdate = req.body;
 
-    await pengaduan.update(fieldsToUpdate);
-    return res.status(200).json({
-      message: "Pengaduan berhasil diperbarui.",
-      pengaduan,
-    });
-  } catch (error) {
-    console.error(`[PUT Update] Error: ${error.message}`);
-    return res.status(500).json({ message: "Internal server error." });
-  }
+      const pengaduan = await Pengaduan.findByPk(id);
+      if (!pengaduan) {
+        return res.status(404).json({ message: "Pengaduan tidak ditemukan." });
+      }
+
+      const validation = validateInput({
+        nik: fieldsToUpdate.nik || pengaduan.nik,
+        umur: fieldsToUpdate.umur || pengaduan.umur,
+        telp_email: fieldsToUpdate.telp_email || pengaduan.telp_email,
+      });
+      if (!validation.valid) {
+        return res.status(400).json({ message: validation.message });
+      }
+
+      if (req.file) {
+        if (pengaduan.bukti) {
+          const oldFilePath = path.join('public/images', pengaduan.bukti);
+          fs.unlink(oldFilePath, (err) => {
+            if (err) console.error("Error menghapus file lama:", err);
+          });
+        }
+        fieldsToUpdate.bukti = req.file.filename;
+      }
+
+      await pengaduan.update(fieldsToUpdate);
+      
+      const updatedPengaduan = await Pengaduan.findByPk(id);
+      return res.status(200).json({
+        message: "Pengaduan berhasil diperbarui.",
+        pengaduan: {
+          ...updatedPengaduan.toJSON(),
+          buktiUrl: updatedPengaduan.bukti ? `http://localhost:5000/images/${updatedPengaduan.bukti}` : null
+        }
+      });
+    } catch (error) {
+      console.error(`[PUT Update] Error: ${error.message}`);
+      if (req.file) {
+        fs.unlinkSync(req.file.path);
+      }
+      return res.status(500).json({ message: "Terjadi kesalahan saat memperbarui pengaduan." });
+    }
+  });
 };
 
 // Controller: Menghapus pengaduan
@@ -131,10 +176,17 @@ export const deletePengaduan = async (req, res) => {
       return res.status(404).json({ message: "Pengaduan tidak ditemukan." });
     }
 
+    if (pengaduan.bukti) {
+      const filePath = path.join('public/images', pengaduan.bukti);
+      fs.unlink(filePath, (err) => {
+        if (err) console.error("Error menghapus file:", err);
+      });
+    }
+
     await pengaduan.destroy();
     return res.status(200).json({ message: "Pengaduan berhasil dihapus." });
   } catch (error) {
     console.error(`[DELETE] Error: ${error.message}`);
-    return res.status(500).json({ message: "Internal server error." });
+    return res.status(500).json({ message: "Terjadi kesalahan saat menghapus pengaduan." });
   }
 };

@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.get('/pengaduan', getAllPengaduan)
 router.get('/pengaduan/:id', getPengaduanById)
-router.post('/pengaduan', upload.single('bukti'), createPengaduan);
+router.post('/pengaduan', createPengaduan);
 router.patch('/pengaduan/:id', updatePengaduan);
 router.delete('/pengaduan/:id', deletePengaduan);
 
