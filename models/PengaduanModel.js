@@ -21,7 +21,7 @@ const Pengaduan = db.define(
     },
     nik: {
       type: DataTypes.STRING(16),
-      allowNull: false,
+      allowNull: true,
     },
     agama: {
       type: DataTypes.STRING(10),
@@ -33,15 +33,16 @@ const Pengaduan = db.define(
     },
     telp_email: {
       type: DataTypes.STRING(100),
-      allowNull: false,
+      allowNull: true,
     },
     umur: {
       type: DataTypes.STRING(2),
-      allowNull: false,
+      allowNull: true,
       validate: {
         min: 1,
         max: 120, // Batas umur yang masuk akal
-      },},
+      },
+    },
     bukti: {
       type: DataTypes.STRING,
       allowNull: true,

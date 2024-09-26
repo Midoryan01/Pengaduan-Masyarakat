@@ -31,15 +31,15 @@ const Tanggapan = db.define('Tanggapan', {
     },
     tanggapan: {
         type: DataTypes.TEXT,
-        allowNull: false
+        allowNull: true
     },
     tindak_lanjut: {
         type: DataTypes.STRING(250),
-        allowNull: false
+        allowNull: true
     },
     keterangan: {
         type: DataTypes.STRING(250),
-        allowNull: false
+        allowNull: true
     }
 }, {
     tableName: 'tanggapan',
