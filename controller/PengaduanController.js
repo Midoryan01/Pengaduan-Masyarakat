@@ -5,26 +5,29 @@ import path from "path";
 import multer from 'multer'; 
 
 // Fungsi helper untuk validasi input
-const validateInput = ({ nik, umur, telp_email }) => {
-  const nikPattern = /^\d{16}$/;
-  const umurPattern = /^(?:[1-9][0-9]?|1[01][0-9]|120)$/;
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const phonePattern = /^\d{10,15}$/;
+// const validateInput = ({ nik, umur, telp_email }) => {
+//   const nikPattern = /^\d{16}$/;
+//   const umurPattern = /^(?:[1-9][0-9]?|1[01][0-9]|120)$/;
+//   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+//   const phonePattern = /^\d{10,15}$/;
 
-  if (!nikPattern.test(nik)) {
-    return { valid: false, message: "NIK harus terdiri dari 16 digit angka." };
-  }
+//   // Mengizinkan input "-" atau kosong untuk NIK, umur, dan telp_email
+//   if (nik !== '-' && nik !== '' && !nikPattern.test(nik)) {
+//     return { valid: false, message: "NIK harus terdiri dari 16 digit angka atau tanda '-' jika tidak ada." };
+//   }
 
-  if (!umurPattern.test(umur)) {
-    return { valid: false, message: "Umur harus antara 1-120." };
-  }
+//   if (umur !== '-' && umur !== '' && !umurPattern.test(umur)) {
+//     return { valid: false, message: "Umur harus antara 1-120 atau tanda '-' jika tidak ada." };
+//   }
 
-  if (!emailPattern.test(telp_email) && !phonePattern.test(telp_email)) {
-    return { valid: false, message: "Telp/Email harus valid." };
-  }
+//   if (telp_email !== '-' && telp_email !== '' && !emailPattern.test(telp_email) && !phonePattern.test(telp_email)) {
+//     return { valid: false, message: "Telp/Email harus valid atau tanda '-' jika tidak ada." };
+//   }
 
-  return { valid: true };
-};
+//   return { valid: true };
+// };
+
+
 
 // Controller: Mendapatkan semua pengaduan
 export const getAllPengaduan = async (req, res) => {
@@ -68,26 +71,21 @@ export const createPengaduan = async (req, res) => {
     try {
       const { nama, alamat, nik, agama, keperluan, telp_email, umur } = req.body;
 
-      if (!req.file) {
-        return res.status(400).json({ message: "File bukti harus diunggah." });
-      }
+      
 
-      const validation = validateInput({ nik, umur, telp_email });
-      if (!validation.valid) {
-        return res.status(400).json({ message: validation.message });
-      }
+      // Jika file tidak ada, tetap lanjutkan tanpa menyimpan file bukti
+      const fileName = req.file ? req.file.filename : null;
 
-      const fileName = req.file.filename;
-
+      // Ubah nilai '-' menjadi null sebelum menyimpan ke database
       const newPengaduan = await Pengaduan.create({
         nama,
         alamat,
-        nik,
+        nik, // Ubah '-' menjadi null
         agama,
         keperluan,
-        telp_email,
-        umur,
-        bukti: fileName,
+        telp_email, // Ubah '-' menjadi null
+        umur, // Ubah '-' menjadi null
+        bukti: fileName,  // bukti bisa null jika tidak ada
         status: "Proses"
       });
 
@@ -95,11 +93,12 @@ export const createPengaduan = async (req, res) => {
         message: "Pengaduan berhasil dibuat.",
         pengaduan: {
           ...newPengaduan.toJSON(),
-          buktiUrl: `http://localhost:5000/images/${fileName}`
+          buktiUrl: fileName ? `http://localhost:5000/images/${fileName}` : null  // Jika ada bukti, buat URL, jika tidak ada biarkan null
         }
       });
     } catch (error) {
       console.error(`[POST Create] Error: ${error.message}`);
+      // Hapus file jika ada kesalahan dan file terunggah
       if (req.file) {
         fs.unlinkSync(req.file.path);
       }
@@ -107,6 +106,8 @@ export const createPengaduan = async (req, res) => {
     }
   });
 };
+
+
 
 
 // Controller: Memperbarui pengaduan
