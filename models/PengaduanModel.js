@@ -43,12 +43,16 @@ const Pengaduan = db.define(
         max: 120, // Batas umur yang masuk akal
       },
     },
+    nama_pendamping: {
+      type: DataTypes.STRING(50),
+      allowNull: false,
+    },
     bukti: {
       type: DataTypes.STRING,
       allowNull: true,
     },
     status: {
-      type: DataTypes.ENUM("Proses", "Selesai"),
+      type: DataTypes.ENUM("Proses", "Selesai","Di Tolak"),
       defaultValue: "Proses",
     },
   },

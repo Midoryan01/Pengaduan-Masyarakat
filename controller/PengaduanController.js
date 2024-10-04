@@ -4,31 +4,6 @@ import fs from "fs";
 import path from "path";
 import multer from 'multer'; 
 
-// Fungsi helper untuk validasi input
-// const validateInput = ({ nik, umur, telp_email }) => {
-//   const nikPattern = /^\d{16}$/;
-//   const umurPattern = /^(?:[1-9][0-9]?|1[01][0-9]|120)$/;
-//   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-//   const phonePattern = /^\d{10,15}$/;
-
-//   // Mengizinkan input "-" atau kosong untuk NIK, umur, dan telp_email
-//   if (nik !== '-' && nik !== '' && !nikPattern.test(nik)) {
-//     return { valid: false, message: "NIK harus terdiri dari 16 digit angka atau tanda '-' jika tidak ada." };
-//   }
-
-//   if (umur !== '-' && umur !== '' && !umurPattern.test(umur)) {
-//     return { valid: false, message: "Umur harus antara 1-120 atau tanda '-' jika tidak ada." };
-//   }
-
-//   if (telp_email !== '-' && telp_email !== '' && !emailPattern.test(telp_email) && !phonePattern.test(telp_email)) {
-//     return { valid: false, message: "Telp/Email harus valid atau tanda '-' jika tidak ada." };
-//   }
-
-//   return { valid: true };
-// };
-
-
-
 // Controller: Mendapatkan semua pengaduan
 export const getAllPengaduan = async (req, res) => {
   try {
@@ -69,7 +44,7 @@ export const createPengaduan = async (req, res) => {
     }
 
     try {
-      const { nama, alamat, nik, agama, keperluan, telp_email, umur } = req.body;
+      const { nama, alamat, nik, agama, keperluan, telp_email, umur, nama_pendamping } = req.body;
 
       
 
@@ -85,6 +60,7 @@ export const createPengaduan = async (req, res) => {
         keperluan,
         telp_email, // Ubah '-' menjadi null
         umur, // Ubah '-' menjadi null
+        nama_pendamping, // Ubah '-' menjadi null
         bukti: fileName,  // bukti bisa null jika tidak ada
         status: "Proses"
       });
