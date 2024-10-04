@@ -46,8 +46,8 @@ const Tanggapan = db.define('Tanggapan', {
     timestamps: false
 });
 
+Tanggapan.belongsTo(Petugas, { as: 'petugas', foreignKey: 'id_petugas' });
 Tanggapan.belongsTo(Pengaduan, { foreignKey: 'id_pengaduan' });
-Tanggapan.belongsTo(Petugas, { foreignKey: 'id_petugas' });
 Pengaduan.hasMany(Tanggapan, { foreignKey: 'id_pengaduan' });
 Petugas.hasMany(Tanggapan, { foreignKey: 'id_petugas' });
 

@@ -10,7 +10,7 @@ export const getAllTanggapan = async (req, res) => {
     const tanggapan = await Tanggapan.findAll({
       include: [
         { model: Pengaduan, attributes: ['nama'] },
-        { model: Petugas, attributes: ['nama'] }
+        { model: Petugas, as: 'petugas', attributes: ['nama'] }  // Pastikan 'as' sesuai dengan alias yang benar
       ]
     });
     res.status(200).json(tanggapan);
